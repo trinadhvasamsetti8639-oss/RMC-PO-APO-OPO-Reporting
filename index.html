@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Polling Duty Attendance</title>
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--tx:#1b2430;--mu:#667085;--bd:#e0e4ec;--pr:#2457d6;--ok:#1a9d4a;--no:#d92d20;--wa:#a16207}
+@media(prefers-color-scheme:dark){:root{--bg:#10151d;--card:#1a212c;--tx:#e8ecf2;--mu:#9aa6b8;--bd:#2c3644;--pr:#6b95ff;--ok:#32d583;--no:#f97066;--wa:#facc15}}
+*{box-sizing:border-box}body{margin:0;font:15px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--pr);color:#fff}
+header b{font-size:17px}header button{background:#ffffff30;color:#fff;border:0}
+main{max-width:1400px;margin:0 auto;padding:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:12px}
+input,select,button{font:inherit;padding:11px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
+input,select{width:100%}button,.call{cursor:pointer;background:var(--pr);color:#fff;border:0;font-weight:600}
+button.ok{background:var(--ok)}button.no{background:var(--no)}button.gh{background:transparent;color:var(--pr);border:1px solid var(--pr)}
+label{display:block;margin:10px 0 4px;color:var(--mu);font-size:13px}
+nav{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}nav button{background:var(--card);color:var(--tx);border:1px solid var(--bd);white-space:nowrap}nav button.on{background:var(--pr);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row>*{flex:1 1 140px}.row>button{flex:0 1 auto}
+dl{display:grid;grid-template-columns:130px 1fr;gap:6px 10px;margin:10px 0}dt{color:var(--mu)}dd{margin:0;font-weight:600}
+.msg{padding:10px 12px;border-radius:8px;margin:10px 0}.msg.e{background:#d92d2022;color:var(--no)}.msg.s{background:#1a9d4a22;color:var(--ok)}.msg.i{background:#2457d622}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%}th,td{padding:8px 10px;border-bottom:1px solid var(--bd);text-align:center}
+th{position:sticky;top:0;background:var(--card)}tfoot td{font-weight:700;background:var(--bg)}a{color:var(--pr);font-weight:700;cursor:pointer}
+.g{color:var(--ok);font-weight:700}.r{color:var(--no);font-weight:700}.y{color:var(--wa);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.mem{text-align:center;border:1px solid var(--bd);border-radius:12px;padding:12px 6px;background:var(--card)}
+.mem svg{width:60px;height:60px}.mem small{display:block;color:var(--mu)}.mem .rl{font-weight:700}
+.call{display:inline-block;margin-top:6px;padding:7px 14px;border-radius:8px;text-decoration:none}
+.pick{display:block;width:100%;text-align:left;margin-top:6px}
+.lg{display:flex;gap:14px;flex-wrap:wrap;align-items:center}.lg i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:4px}
+.dg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.rg2{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+.rt{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:5px 3px;text-align:center;font-size:11px;min-width:0}.rt svg{width:100%;max-width:38px;height:auto}.rt b,.rt i{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:normal}.rt i{color:var(--mu);font-size:10px}
+.pr{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)}.pr svg{width:38px;height:38px;flex:none}.pr>div{flex:1;min-width:0}.pr small{color:var(--mu);display:block}
+.tile{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px}.tile .th{font-weight:700;margin-bottom:4px;display:block}
+.pp{display:flex;gap:2px}.pp span{flex:1;text-align:center;min-width:0}.pp svg{width:100%;max-width:34px;height:auto}.pp i{display:block;font-style:normal;font-size:9px;color:var(--mu)}
+#t-dash:fullscreen{background:var(--bg);padding:12px;overflow:auto}
+#map{height:320px;border-radius:10px;margin:10px 0;background:var(--bg)}.hide{display:none!important}
+@media(max-width:1100px){.dg{grid-template-columns:repeat(3,1fr)}.rg2{grid-template-columns:repeat(6,1fr)}}
+@media(max-width:640px){.dg{grid-template-columns:repeat(2,1fr)}.rg2{grid-template-columns:repeat(3,1fr)}main{padding:8px}dl{grid-template-columns:100px 1fr}th,td{padding:7px 5px;font-size:14px}.grid{grid-template-columns:repeat(2,1fr)}}
+</style></head><body>
+<header><b>🗳️ Polling Duty Attendance</b><span id="who" class="hide"><span id="wn"></span> <button onclick="logout()">Logout</button></span></header>
+<main>
+<div id="v-login" class="card" style="max-width:380px;margin:30px auto">
+ <h2 style="margin-top:0">Login</h2><div id="demo" class="msg i hide">Demo mode: data stays in this browser. Logins: admin/admin123, user/user123, ro/ro123 (stations 1–5), sec/sec123, dist/dist123, display/led123</div>
+ <label>User name</label><input id="lu" autocomplete="username"><label>Password</label><input id="lp" type="password" autocomplete="current-password" onkeydown="event.key=='Enter'&&login()">
+ <div id="le"></div><button style="width:100%;margin-top:12px" onclick="login()">Login</button></div>
+
+<div id="v-app" class="hide">
+ <nav id="nav"></nav>
+
+ <section id="t-cap" class="hide">
+  <div class="card"><label>Attendance type</label>
+   <select id="ct" onchange="ctype=this.value;resetCap()"><option value="T">1. Capture Attendance of Team / Polling Station Allotted</option><option value="R">2. Capture Attendance for Reserve Staff</option></select>
+   <label id="cl"></label><div class="row"><input id="eid" onkeydown="event.key=='Enter'&&find()"><button onclick="find()">Find</button></div><div id="ce"></div></div>
+  <div id="c2" class="card hide"></div>
+ </section>
+
+ <section id="t-rep" class="hide">
+  <div id="rsel" class="card"><label>Report</label><select id="rt" onchange="rep()"><option value="T">Team / Polling Station report</option><option value="R">Reserve staff report</option></select></div>
+  <div id="rg"></div>
+ </section>
+
+ <section id="t-asg" class="hide">
+  <div class="card"><h3 style="margin-top:0">Assign Reserve Staff to Polling Team</h3><label>Polling Station / Group No</label>
+   <div class="row"><input id="ap" type="number" min="1" onkeydown="event.key=='Enter'&&asgLoad()"><button onclick="asgLoad()">Show team</button></div>
+   <div class="msg i">Only reserve staff who have <b>attended</b> can be assigned. Others are listed as unavailable – not assigned due to not present.</div><div id="ae2"></div></div>
+  <div id="ab"></div><div id="apk"></div>
+ </section>
+
+ <section id="t-dist" class="hide"><div id="dsum"></div></section>
+
+ <section id="t-dash" class="hide"></section>
+
+ <section id="t-adm" class="hide">
+  <div class="card"><h3 style="margin-top:0">Geofencing</h3>
+   <label><input type="checkbox" id="ge" style="width:auto"> Enable geofencing for all users</label>
+   <div class="row"><div><label>Latitude</label><input id="gla" type="number" step="any"></div><div><label>Longitude</label><input id="gln" type="number" step="any"></div><div><label>Radius (metres)</label><input id="gr" type="number" min="10"></div></div>
+   <div id="map" class="hide"></div><div id="mapn" class="msg i hide">Add a Google Maps key in config.js to pick the point on a map. Typing latitude/longitude works without it.</div>
+   <div class="row"><button class="gh" onclick="myLoc()">Use my current location</button><button onclick="saveGeo()">Save geofence</button></div><div id="ae"></div></div>
+  <div class="card"><h3 style="margin-top:0">Fresh attendance (clear dashboard)</h3>
+   <div class="row"><select id="cs"><option value="all">Team + Reserve attendance</option><option value="team">Team attendance only</option><option value="reserve">Reserve attendance only</option><option value="dist">Distribution status only</option></select><button class="no" onclick="clearA()">Clear attendance</button></div>
+   <small style="color:var(--mu)">Attendance options also clear reserve assignments. Employee data and users are not touched.</small><div id="cle"></div></div>
+  <div class="card"><h3 style="margin-top:0">Employee database</h3>
+   <div class="row"><input type="file" id="fx" accept=".xlsx,.xls" onchange="readX(this)"><select id="dm1"><option value="update">Update existing database (merge)</option><option value="replace">Replace completely (clears attendance)</option></select><button onclick="applyX()">Apply</button></div>
+   <small style="color:var(--mu)">Use the same sheet format: team sheet (GROUP_NO, PO_ELECT_IDNO…) and/or reserve sheet (EID, POST_dESG…). Update matches teams by GROUP_NO and reserve staff by Post+EID.</small><div id="de"></div></div>
+  <div class="card"><h3 style="margin-top:0">Users</h3>
+   <div class="row"><input id="nu" placeholder="User name"><input id="np" placeholder="Password (blank = keep)"><select id="nr"><option value="user">User (attendance)</option><option value="ro">RO (assigned stations)</option><option value="sec">Administrative Secretary (assign reserve)</option><option value="dist">Distribution Officer (update distribution)</option><option value="display">LED Display (view only)</option><option value="admin">Admin</option></select></div>
+   <label>Polling stations assigned to RO (e.g. 1-25, 30, 41-50)</label><div class="row"><input id="ng" placeholder="1-25, 30"><button onclick="addU()">Add / update user</button></div><div id="ue"></div>
+   <div id="ul" class="tw" style="margin-top:10px"></div></div>
+ </section>
+</div></main>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script>
+const $=s=>document.getElementById(s),REASONS=['Leave','Health Issues','Duties Cancelled','Changed to Reserve'],SLIDE_SEC=120,PER=25,RPER=50,POLL=10000;
+const COL={g:'#1a9d4a',r:'#d92d20',y:'#eab308'};
+let DATA=[],IDX={},PH={},RES=[],RESBY={},ATT={},ASG={},ASR={},DIST={},SET={},ME=null,cur=null,CANDS=[],USERS=[],PK=null,UP=null,ctype='T',dmode='T',map,mk,circ,slide=0,left=SLIDE_SEC,paused=false,timers=[];
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const msg=(id,t,c='e')=>$(id).innerHTML=t?`<div class="msg ${c}">${esc(t)}</div>`:'';
+const dg=s=>String(s||'').replace(/\D/g,'').slice(-10);
+const cl=a=>!a?'r':a.status==='Attended'?'g':'y';
+const stTxt=a=>!a?'Absent (not reported)':a.status==='Attended'?'Present':a.status;
+const tm=a=>a?new Date(a.marked_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:true}):'—';
+const person=(c,b)=>`<svg viewBox="0 0 24 24" fill="${COL[c]}"><circle cx="12" cy="7" r="4.5"/><path d="M3 22c0-5 4-8.5 9-8.5s9 3.5 9 8.5z"/>${b?'<circle cx="19" cy="18" r="5.2" fill="#0a7a35" stroke="#fff" stroke-width="1.2"/><path d="M16.8 15.8l4.4 4.4M21.2 15.8l-4.4 4.4" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>':''}</svg>`;
+const maxG=()=>Math.max(0,...DATA.map(g=>g.g));
+function parseG(s){const o=new Set,mx=maxG();String(s).split(',').forEach(t=>{const m=t.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/);if(m){for(let i=+m[1];i<=+(m[2]||m[1]);i++)if(i>=1&&i<=mx)o.add(i)}});return[...o].sort((a,b)=>a-b)}
+function fmtG(a){a=a||[];const o=[];for(let i=0;i<a.length;){let j=i;while(a[j+1]===a[j]+1)j++;o.push(j>i?a[i]+'-'+a[j]:''+a[i]);i=j+1}return o.join(', ')}
+function build(){IDX={};PH={};RESBY={};DATA.forEach(g=>g.m.forEach(m=>{const x={g:g.g,m};IDX[m[1]]=x;const d=dg(m[6]);if(d)(PH[d]=PH[d]||[]).push(x)}));RES.forEach(r=>RESBY[r[0]]=r)}
+
+if(!C.API_URL)$('demo').classList.remove('hide');
+
+/* ---------- auth / navigation ---------- */
+async function login(){msg('le','');const u=$('lu').value.trim(),p=$('lp').value;if(!u||!p)return msg('le','Enter user name and password');
+ try{const r=await remote.login(u,p);if(!r)return msg('le','Invalid user name or password');ME={u,p,role:r.role,groups:r.groups||[]};sessionStorage.setItem('me',JSON.stringify(ME));await start()}catch(e){msg('le',e.message)}}
+function logout(){sessionStorage.removeItem('me');location.reload()}
+async function loadData(){let t=null,r=null;try{t=await remote.dataGet('team');r=await remote.dataGet('reserve')}catch{}
+ DATA=t||await fetch('data.json').then(x=>x.json());RES=r||await fetch('reserve.json').then(x=>x.json());build()}
+async function start(){
+ if(!DATA.length)await loadData();
+ try{SET=await remote.settings()||{}}catch{SET={}}
+ $('v-login').classList.add('hide');$('v-app').classList.remove('hide');$('who').classList.remove('hide');$('wn').textContent=ME.u+' ('+ME.role.toUpperCase()+')';
+ const R=ME.role,ro=R==='ro',tabs=[];if(['admin','user'].includes(R))tabs.push(['cap','Capture Attendance']);if(['admin','sec'].includes(R))tabs.push(['asg','Assign Reserve']);if(R!=='display')tabs.push(['rep','Reports'],['dist','Distribution']);tabs.push(['dash','Dashboard']);if(R==='admin')tabs.push(['adm','Admin']);
+ $('nav').innerHTML=tabs.map(t=>`<button id="n-${t[0]}" onclick="tab('${t[0]}')">${t[1]}</button>`).join('');
+ $('rsel').classList.toggle('hide',ro);resetCap();tab(tabs[0][0])}
+async function tab(t,g){clearInterval(timers[0]);clearInterval(timers[1]);
+ ['cap','asg','rep','dist','dash','adm'].forEach(x=>{$('t-'+x).classList.toggle('hide',x!==t);const b=$('n-'+x);b&&b.classList.toggle('on',x===t)});
+ if(t==='rep'){await rep();if(g)detail(g)}if(t==='dash')dash();if(t==='dist')distPage();if(t==='adm')admin();if(t==='asg'){$('ab').innerHTML=$('apk').innerHTML='';msg('ae2','')}}
+async function load(){const r=await remote.all();ATT={};ASG={};ASR={};DIST={};r.att.forEach(x=>ATT[x.k]=x);r.asg.forEach(x=>{ASG[x.group_no+'|'+x.role]=x;ASR[x.rid]=x});r.dist.forEach(x=>DIST[x.group_no+'|'+x.stage]=x)}
+const myGroups=()=>ME.role==='ro'?DATA.filter(g=>ME.groups.includes(g.g)):DATA;
+
+/* ---------- capture ---------- */
+function resetCap(){$('c2').classList.add('hide');msg('ce','');$('eid').value='';
+ $('cl').textContent=ctype==='T'?'Election ID No (PO / APO / OPO) or Phone Number':'Phone Number or Name of the Reserve Employee';$('eid').placeholder=ctype==='T'?'Election ID or phone':'Phone or name'}
+const tRec=x=>({key:'T'+x.m[1],kind:'T',g:x.g,role:x.m[0],id:x.m[1],name:x.m[2],desg:x.m[3],mandal:x.m[5],phone:x.m[6]});
+const rRec=r=>({key:'R'+r[0],kind:'R',g:null,role:r[8],id:r[0],name:r[3],desg:r[4],mandal:r[6],phone:r[9],extra:`S.No ${r[0]} · EID ${r[1]} · Emp ID ${r[2]||'—'}`});
+function find(){msg('ce','');$('c2').classList.add('hide');const q=$('eid').value.trim();if(!q)return msg('ce','Enter a value to search');
+ const num=/^[\d\s+-]+$/.test(q),d=dg(q);let c=[];
+ if(ctype==='T'){if(num&&d.length===10)c=(PH[d]||[]).map(tRec);else if(/^\d+$/.test(q)&&IDX[+q])c=[tRec(IDX[+q])]}
+ else if(num&&d.length===10)c=RES.filter(r=>r[9]===d).map(rRec);
+ else{const t=q.toLowerCase().split(/\s+/);c=RES.filter(r=>t.every(w=>r[3].toLowerCase().includes(w))).map(rRec)}
+ if(!c.length)return msg('ce','No employee found for "'+q+'"');
+ if(c.length===1){cur=c[0];return showEmp()}
+ CANDS=c.slice(0,25);$('c2').classList.remove('hide');
+ $('c2').innerHTML=`<b>${c.length} matches – select the employee</b>`+CANDS.map((x,i)=>`<button class="gh pick" onclick="cur=CANDS[${i}];showEmp()">${esc(x.name)} · ${esc(x.desg)} · ${esc(x.mandal)}${x.g?' · PS '+x.g+' '+x.role:''}</button>`).join('')+(c.length>25?'<small>Refine your search to narrow the list.</small>':'')}
+async function showEmp(){try{await load()}catch{}const a=ATT[cur.key];
+ $('c2').classList.remove('hide');$('c2').innerHTML=`<h3 style="margin-top:0">Please confirm your details</h3>
+ <dl>${cur.kind==='T'?`<dt>Group / Polling Station</dt><dd>${cur.g}</dd>`:`<dt>Reserve Ref</dt><dd>${esc(cur.extra)}</dd>`}<dt>Post</dt><dd>${esc(cur.role)}</dd><dt>Name</dt><dd>${esc(cur.name)}</dd><dt>Designation</dt><dd>${esc(cur.desg)}</dd><dt>Work Mandal</dt><dd>${esc(cur.mandal)}</dd><dt>Phone</dt><dd>${esc(cur.phone||'—')}</dd></dl>
+ ${a?`<div class="msg i">Already recorded: <b>${esc(stTxt(a))}</b> at ${tm(a)}. Saving again will overwrite it.</div>`:''}
+ <div id="c3"><button class="ok" onclick="confirmed()" style="width:100%">✔ Yes, these details are correct</button></div><div id="cm"></div>`}
+function confirmed(){$('c3').innerHTML=`<button class="ok" style="width:100%" onclick="submit('Attended')">Mark as ATTENDED</button>
+ <label style="margin-top:14px">Not attended – select reason</label><div class="row">${REASONS.map(r=>`<button class="no" onclick="submit('${r}')">${r}</button>`).join('')}</div>`}
+function getPos(){return new Promise((ok,ko)=>{if(!navigator.geolocation)return ko(Error('Location not supported on this device'));
+ navigator.geolocation.getCurrentPosition(p=>ok(p.coords),()=>ko(Error('Could not get your location – allow location access and try again')),{enableHighAccuracy:true,timeout:20000,maximumAge:0})})}
+async function submit(status){msg('cm','Checking location…','i');let lat=null,lng=null;
+ try{try{const p=await getPos();lat=p.latitude;lng=p.longitude}catch(e){if(SET.enabled)throw e}
+  if(SET.enabled&&SET.lat!=null){const d=dist(SET.lat,SET.lng,lat,lng);if(d>SET.radius)throw Error(`You are outside the allowed area (${Math.round(d)} m away, limit ${SET.radius} m)`)}
+  await remote.mark({k:cur.key,kind:cur.kind,group_no:cur.g,idno:cur.id,role:cur.role,status,lat,lng});
+  $('c2').innerHTML=`<div class="msg s"><b>${esc(cur.name)}</b> recorded as <b>${esc(status)}</b> · Reported ${tm({marked_at:new Date()})}</div><button onclick="resetCap();$('eid').focus()">Next employee</button>`}
+ catch(e){msg('cm',e.message)}}
+
+/* ---------- reserve assignment (Administrative Secretary / admin) ---------- */
+async function asgLoad(){msg('ae2','');const n=+$('ap').value,g=DATA.find(x=>x.g===n);$('apk').innerHTML='';if(!g)return msg('ae2','No polling station '+$('ap').value);
+ try{await load()}catch(e){return msg('ae2',e.message)}
+ $('ab').innerHTML=`<div class="card"><h3 style="margin-top:0">Polling Station ${n}</h3><div class="grid">${g.m.map(m=>{const a=ATT['T'+m[1]],c=cl(a),as=ASG[n+'|'+m[0]],R=as&&RESBY[as.rid];
+  return`<div class="mem">${person(as?'g':c,!!as)}<div class="rl">${m[0]}</div><b>${esc(m[2])}</b><small>${esc(m[6]||'No phone')}</small><small class="${as?'g':c}">${as?'Assigned':esc(stTxt(a))}</small>`+
+  (as?`<small>Reserve: <b>${esc(R?R[3]:'#'+as.rid)}</b><br>${esc(R?R[9]:'')}</small><button class="gh" style="margin-top:6px" onclick="unasg(${n},'${m[0]}')">Remove</button>`:c==='g'?'<small>Present – no reserve needed</small>':`<button style="margin-top:6px" onclick="openPick(${n},'${m[0]}')">Assign reserve</button>`)+'</div>'}).join('')}</div></div>`}
+function openPick(n,role){PK={g:n,role};const dp=role.startsWith('OPO')?'OPO':role;
+ $('apk').innerHTML=`<div class="card"><h3 style="margin-top:0">Reserve staff for PS ${n} · ${role}</h3><div class="row"><select id="pf" onchange="pickList()">${['All','PO','APO','OPO'].map(o=>`<option ${o===dp?'selected':''}>${o}</option>`).join('')}</select><input id="pq" placeholder="Search name / phone / mandal" oninput="pickList()"></div><div id="pl"></div></div>`;pickList();$('apk').scrollIntoView({behavior:'smooth'})}
+function pickList(){const f=$('pf').value,q=$('pq').value.toLowerCase().trim();
+ const l=RES.filter(r=>(f==='All'||r[8]===f)&&(!q||[r[3],r[4],r[6],r[9]].join(' ').toLowerCase().includes(q))).map(r=>{const a=ATT['R'+r[0]],as=ASR[r[0]];return{r,a,as,k:as?1:cl(a)==='g'?0:2}}).sort((x,y)=>x.k-y.k||x.r[0]-y.r[0]);
+ $('pl').innerHTML=l.slice(0,80).map(({r,a,as,k})=>`<div class="pr">${person(k===1?'g':cl(a),k===1)}<div><b>${esc(r[3])}</b> · ${r[8]}<small>${esc(r[4])} · ${esc(r[6])} · ${esc(r[9]||'No phone')}</small><small class="${k===0?'g':k===1?'g':cl(a)}">${k===0?'Present – available':k===1?`Assigned to PS ${as.group_no} ${as.role}`:'Unavailable – not assigned due to not present ('+esc(stTxt(a))+')'}</small></div>${k===0?`<button class="ok" onclick="doAsg(${r[0]})">Assign</button>`:''}</div>`).join('')||'No matching staff';
+ if(l.length>80)$('pl').innerHTML+=`<small>Showing 80 of ${l.length}. Search to narrow.</small>`}
+async function doAsg(id){try{await remote.assign(PK.g,PK.role,id);$('apk').innerHTML='';await asgLoad()}catch(e){msg('ae2',e.message);window.scrollTo(0,0)}}
+async function unasg(n,r){if(!confirm('Remove the reserve assignment?'))return;try{await remote.unassign(n,r);await asgLoad()}catch(e){msg('ae2',e.message)}}
+
+/* ---------- reports ---------- */
+const sc=ms=>{let g=0,y=0;ms.forEach(a=>{const c=cl(a);c==='g'?g++:c==='y'&&y++});return{g,y,r:ms.length-g-y}};
+function card(o){const c=cl(o.a),ph=o.phone;return`<div class="mem">${person(c)}<div class="rl">${esc(o.label)}</div>${o.sub?`<small>${esc(o.sub)}</small>`:''}<b>${esc(o.name)}</b>${o.desg?`<small>${esc(o.desg)}</small>`:''}<small>${ph?`<a href="tel:${esc(ph)}" style="font-weight:400">${esc(ph)}</a>`:'No phone'}</small><small class="${c}">${esc(stTxt(o.a))}</small><small>Reported: ${tm(o.a)}</small>${o.note||''}${c!=='g'&&ph?`<a class="call" href="tel:${esc(ph)}">📞 Call</a>`:''}</div>`}
+async function rep(){$('rg').innerHTML='<div class="card">Loading…</div>';try{await load()}catch(e){return $('rg').innerHTML=`<div class="msg e">${esc(e.message)}</div>`}
+ ME.role!=='ro'&&$('rt').value==='R'?resReport():summary()}
+function summary(){let T=0,G=0,Y=0,R=0;const rows=myGroups().map(g=>{const s=sc(g.m.map(m=>ATT['T'+m[1]])),t=g.m.length;T+=t;G+=s.g;Y+=s.y;R+=s.r;return`<tr><td><a onclick="detail(${g.g})">${g.g}</a></td><td>${t}</td><td class="g">${s.g}</td><td class="y">${s.y}</td><td class="r">${s.r}</td></tr>`}).join('');
+ $('rg').innerHTML=`<div class="card"><div class="row"><h3 style="margin:0;flex:2">Group / Polling Station Attendance</h3><button onclick="rep()">↻ Refresh</button></div>
+ <div class="tw" style="max-height:70vh;overflow:auto;margin-top:10px"><table><thead><tr><th>Group / PS No</th><th>Total</th><th>Present</th><th>Not attended (reason)</th><th>Absent</th></tr></thead><tbody>${rows}</tbody>
+ <tfoot><tr><td>Grand Total (${myGroups().length})</td><td>${T}</td><td class="g">${G}</td><td class="y">${Y}</td><td class="r">${R}</td></tr></tfoot></table></div></div>`}
+function detail(n){const g=DATA.find(x=>x.g===n);$('rg').innerHTML=`<div class="card"><button class="gh" onclick="rep()">← Back to summary</button><h3>Group / PS ${n}</h3><div class="grid">${g.m.map(m=>{const as=ASG[n+'|'+m[0]],R=as&&RESBY[as.rid];
+ return card({label:m[0],name:m[2],desg:m[3],phone:m[6],a:ATT['T'+m[1]],note:R?`<small class="g">✕ Reserve assigned: <b>${esc(R[3])}</b> ${R[9]?`<a href="tel:${esc(R[9])}" style="font-weight:400">${esc(R[9])}</a>`:''}</small>`:''})}).join('')}</div></div>`}
+function resReport(){const s=sc(RES.map(r=>ATT['R'+r[0]]));
+ $('rg').innerHTML=`<div class="card"><div class="row"><h3 style="margin:0;flex:2">Reserve Staff Attendance</h3><button onclick="rep()">↻ Refresh</button></div>
+ <div class="lg" style="margin:8px 0">Total <b>${RES.length}</b><span><i style="background:${COL.g}"></i>Present <b>${s.g}</b></span><span><i style="background:${COL.y}"></i>Reason <b>${s.y}</b></span><span><i style="background:${COL.r}"></i>Absent <b>${s.r}</b></span><span><i style="background:#0a7a35"></i>Assigned <b>${Object.keys(ASR).length}</b></span></div>
+ <div class="row"><input id="rq" placeholder="Search EID, Emp ID, name, designation, post" oninput="resList()"><select id="rs" onchange="resList()"><option value="">All</option><option value="g">Present</option><option value="y">Reason</option><option value="r">Absent</option><option value="a">Assigned</option></select></div></div>
+ <div class="card"><div class="tw" style="max-height:75vh;overflow:auto"><table><thead><tr><th>S.No</th><th>EID</th><th>Emp ID</th><th></th><th>Name</th><th>Designation</th><th>Post</th><th>Phone</th><th>Status</th><th>Reported time</th><th>Assigned to</th></tr></thead><tbody id="rl"></tbody></table></div></div>`;resList()}
+function resList(){const q=$('rq').value.toLowerCase().trim(),f=$('rs').value;
+ const l=RES.filter(r=>{const a=ATT['R'+r[0]];return(!f||(f==='a'?ASR[r[0]]:cl(a)===f))&&(!q||[r[0],r[1],r[2],r[3],r[4],r[8]].join(' ').toLowerCase().includes(q))});
+ $('rl').innerHTML=l.map(r=>{const a=ATT['R'+r[0]],c=cl(a),as=ASR[r[0]];return`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]||'—'}</td><td style="width:34px">${person(c,!!as).replace('<svg','<svg width="28" height="28"')}</td><td style="text-align:left">${esc(r[3])}</td><td style="text-align:left">${esc(r[4])}</td><td>${r[8]}</td><td>${r[9]?`<a href="tel:${r[9]}" style="font-weight:400">${r[9]}</a>`:'—'}</td><td class="${c}">${esc(stTxt(a))}</td><td>${tm(a)}</td><td>${as?`<span class="g">✕ Assigned: PS ${as.group_no} ${as.role}</span>`:'—'}</td></tr>`}).join('')||'<tr><td colspan="11">No matching staff</td></tr>'}
+
+/* ---------- live dashboard ---------- */
+const dItems=()=>dmode==='R'&&ME.role!=='ro'?{L:RES,P:RPER}:{L:myGroups(),P:PER};
+function dash(){slide=0;left=SLIDE_SEC;paused=false;dmode='T';
+ $('t-dash').innerHTML=`<div class="card"><div class="row"><div class="lg"><b id="di"></b><span><i style="background:${COL.g}"></i>Present</span><span><i style="background:${COL.y}"></i>Not attended (reason)</span><span><i style="background:${COL.r}"></i>Absent</span></div>
+ <div class="lg" style="flex:0 0 auto">${ME.role==='ro'?'':`<select id="dm" style="width:auto" onchange="dmode=this.value;slide=0;left=SLIDE_SEC;draw()"><option value="T">Team staff</option><option value="R">Reserve staff</option></select>`}<span id="dc"></span><button class="gh" onclick="nextS(-1)">◀</button><button class="gh" id="dp" onclick="paused=!paused;$('dp').textContent=paused?'▶ Play':'❚❚ Pause'">❚❚ Pause</button><button class="gh" onclick="nextS(1)">▶</button><button class="gh" onclick="$('t-dash').requestFullscreen&&$('t-dash').requestFullscreen()">⛶</button></div></div><div id="dt" style="margin-top:6px;color:var(--mu)"></div>${['ro','display'].includes(ME.role)?'':'<div style="margin-top:6px"><a href="team-dashboard.html" target="_blank">📺 Team LED display</a> · <a href="reserve-dashboard.html" target="_blank">📺 Reserve LED display</a></div>'}</div><div id="dgrid"></div>`;
+ refresh();timers=[setInterval(tick,1000),setInterval(refresh,POLL)]}
+function tick(){if(paused)return;left--;if(left<=0)nextS(1);else $('dc').textContent='Next slide in '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0')}
+function nextS(d){const{L,P}=dItems(),n=Math.max(1,Math.ceil(L.length/P));slide=(slide+d+n)%n;left=SLIDE_SEC;draw()}
+async function refresh(){try{await load()}catch{}draw()}
+function draw(){const{L,P}=dItems(),n=Math.max(1,Math.ceil(L.length/P)),part=L.slice(slide*P,slide*P+P),R=dmode==='R'&&ME.role!=='ro';if(slide>=n)slide=0;
+ let s;if(R)s=sc(RES.map(r=>ATT['R'+r[0]]));else{s={g:0,y:0,r:0};L.forEach(x=>{const t=sc(x.m.map(m=>ATT['T'+m[1]]));s.g+=t.g;s.y+=t.y;s.r+=t.r})}
+ const rng=part.length?(R?` · S.No ${part[0][0]}–${part[part.length-1][0]}`:` · PS ${part[0].g}–${part[part.length-1].g}`):'';
+ $('di').textContent=`Slide ${slide+1}/${n}${rng}`;
+ $('dc').textContent='Next slide in '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
+ $('dt').innerHTML=`${R?'Reserve':'Overall'}: <b class="g">${s.g} present</b> · <b class="y">${s.y} with reason</b> · <b class="r">${s.r} absent</b> of ${s.g+s.y+s.r}${R?` · <b class="g">✕ ${Object.keys(ASR).length} assigned</b>`:''} · live (refreshes every ${POLL/1000}s)`;
+ $('dgrid').className=R?'rg2':'dg';
+ $('dgrid').innerHTML=R?part.map(r=>{const as=ASR[r[0]];return`<div class="rt" title="${esc(r[3])}"><span>#${r[0]}</span>${person(cl(ATT['R'+r[0]]),!!as)}<b>${esc(r[3])}</b><i>${r[8]}${as?' → PS '+as.group_no:''}</i></div>`}).join('')
+ :part.map(x=>`<div class="tile"><a class="th" onclick="tab('rep',${x.g})">PS ${x.g}</a><div class="pp">${x.m.map(m=>{const as=ASG[x.g+'|'+m[0]];return`<span>${person(as?'g':cl(ATT['T'+m[1]]),!!as)}<i>${m[0].replace('OPO','O')}${as?'+R':''}</i></span>`}).join('')}</div></div>`).join('')}
+/* ---------- distribution status ---------- */
+const STAGES=['EVM / VVPAT issued','Polling material issued','Team dispatched'],canD=()=>['admin','sec','dist'].includes(ME.role);
+const dN=g=>STAGES.filter((_,i)=>DIST[g+'|'+(i+1)]).length,dC=g=>{const n=dN(g);return n===0?'r':n===STAGES.length?'g':'y'};
+const dLast=g=>STAGES.reduce((m,_,i)=>Math.max(m,+(DIST[g+'|'+(i+1)]?.time||0)),0);
+async function distPage(){$('dsum').innerHTML='<div class="card">Loading…</div>';try{await load()}catch(e){return $('dsum').innerHTML=`<div class="msg e">${esc(e.message)}</div>`}
+ $('dsum').innerHTML=`<div class="card"><div class="row"><h3 style="margin:0;flex:2">Distribution Status – Polling Stations</h3><button onclick="distPage()">↻ Refresh</button></div><div id="dcnt" class="lg" style="margin:8px 0"></div>
+ <div class="row"><input id="dq" type="number" min="1" placeholder="Go to PS no" oninput="distList()"><select id="df" onchange="distList()"><option value="">All</option><option value="g">Completed</option><option value="y">In progress</option><option value="r">Pending</option></select></div></div>
+ <div class="card"><div class="tw" style="max-height:75vh;overflow:auto"><table><thead><tr><th>PS No</th>${STAGES.map(s=>`<th>${s}</th>`).join('')}<th>Status</th><th>Last update</th>${canD()?'<th></th>':''}</tr></thead><tbody id="dl"></tbody></table></div></div>`;distList()}
+function distList(){const G=myGroups(),can=canD(),q=$('dq').value,f=$('df').value,c={g:0,y:0,r:0};G.forEach(g=>c[dC(g.g)]++);
+ $('dcnt').innerHTML=`Total <b>${G.length}</b><span><i style="background:${COL.g}"></i>Completed <b>${c.g}</b></span><span><i style="background:${COL.y}"></i>In progress <b>${c.y}</b></span><span><i style="background:${COL.r}"></i>Pending <b>${c.r}</b></span>`;
+ $('dl').innerHTML=G.filter(g=>(!f||dC(g.g)===f)&&(!q||String(g.g)===q)).map(g=>{const k=dC(g.g),t=dLast(g.g);
+  return`<tr><td><b>${g.g}</b></td>`+STAGES.map((_,i)=>{const x=DIST[g.g+'|'+(i+1)];return`<td>${can?`<input type="checkbox" style="width:22px;height:22px" ${x?'checked':''} onchange="distSet(${g.g},[${i+1}],this.checked)">`:x?'<span class="g">✔</span>':'<span class="r">✘</span>'}${x?`<small style="display:block;color:var(--mu)">${tm({marked_at:x.time})}</small>`:''}</td>`}).join('')+
+  `<td class="${k}">${k==='g'?'Completed':k==='y'?'In progress ('+dN(g.g)+'/'+STAGES.length+')':'Pending'}</td><td>${t?tm({marked_at:t}):'—'}</td>${can?`<td><button class="gh" onclick="distSet(${g.g},[1,2,3],true)">✔ All</button></td>`:''}</tr>`}).join('')||'<tr><td colspan="7">No matching stations</td></tr>'}
+async function distSet(g,st,v){try{await remote.distSet(g,st,v);const now=Date.now();st.forEach(i=>{if(v)DIST[g+'|'+i]={group_no:g,stage:i,by:ME.u,time:now};else delete DIST[g+'|'+i]});distList()}catch(e){alert(e.message);distPage()}}
+
+/* ---------- admin ---------- */
+function admin(){$('ge').checked=!!SET.enabled;$('gla').value=SET.lat??'';$('gln').value=SET.lng??'';$('gr').value=SET.radius||200;users();
+ if(C.GOOGLE_MAPS_KEY){$('map').classList.remove('hide');if(window.google)drawMap();else{window.initMap=drawMap;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${C.GOOGLE_MAPS_KEY}&callback=initMap`;document.head.appendChild(s)}}else $('mapn').classList.remove('hide')}
+function drawMap(){const c={lat:+$('gla').value||17.0005,lng:+$('gln').value||81.804};map=new google.maps.Map($('map'),{center:c,zoom:$('gla').value?16:12});
+ mk=new google.maps.Marker({map,position:c,draggable:true});circ=new google.maps.Circle({map,center:c,radius:+$('gr').value||200,fillOpacity:.15});
+ const set=p=>{mk.setPosition(p);circ.setCenter(p);$('gla').value=(+p.lat()).toFixed(6);$('gln').value=(+p.lng()).toFixed(6)};
+ map.addListener('click',e=>set(e.latLng));mk.addListener('dragend',e=>set(e.latLng));$('gr').oninput=()=>circ.setRadius(+$('gr').value||0)}
+async function myLoc(){try{const p=await getPos();$('gla').value=p.latitude.toFixed(6);$('gln').value=p.longitude.toFixed(6);if(map){const c={lat:p.latitude,lng:p.longitude};map.setCenter(c);map.setZoom(16);mk.setPosition(c);circ.setCenter(c)}}catch(e){msg('ae',e.message)}}
+async function saveGeo(){const s={enabled:$('ge').checked,lat:parseFloat($('gla').value),lng:parseFloat($('gln').value),radius:parseInt($('gr').value)||200};
+ if(s.enabled&&(isNaN(s.lat)||isNaN(s.lng)))return msg('ae','Enter latitude and longitude, or pick a point on the map');if(isNaN(s.lat))s.lat=s.lng=null;
+ try{await remote.save(s);SET=s;msg('ae','Geofence saved – applies to all users immediately','s')}catch(e){msg('ae',e.message)}}
+async function clearA(){const v=$('cs').value;if(!confirm('Permanently delete '+$('cs').selectedOptions[0].text+' and all reserve assignments so a fresh attendance can be taken?'))return;
+ try{await remote.clear(v);ATT={};ASG={};ASR={};DIST={};msg('cle','Attendance cleared – dashboards will show a fresh start','s')}catch(e){msg('cle',e.message)}}
+const S=v=>v==null?'':String(v).replace(/\.0$/,'').trim(),CD=v=>S(v).replace(/^-\d+\s*/,'');
+const ROLES=[['PO','PO_',''],['APO','APO_',''],['OPO1','OPO_','_1'],['OPO2','OPO_','_2'],['OPO3','OPO_','_3'],['OPO4','OPO_','_4']];
+const xTeam=rows=>rows.map(r=>({g:+S(r.GROUP_NO),m:ROLES.filter(([,p,f])=>S(r[p+'ELECT_IDNO'+f])).map(([ro,p,f])=>[ro,+S(r[p+'ELECT_IDNO'+f]),S(r[p+'EMP_NAME'+f]),CD(r[p+'EMP_DESG'+f]),S(r[p+'OFF_NAME'+f]),S(r[p+'WORK_MANDAL'+f]),S(r[p+'MOBILE'+f])])})).filter(x=>x.g);
+const xRes=rows=>rows.map(r=>[0,+S(r.EID),S(r.EMP_ID),S(r.EMP_NAME),CD(r.Desg),S(r.office_name),S(r.WORK_MAND_NAME),S(r.RES_MAND_NAME),S(r.POST_dESG),S(r.Mobile).replace(/\D/g,'').slice(-10)]).filter(r=>r[3]);
+const xl=()=>new Promise((ok,ko)=>{if(window.XLSX)return ok();const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=ok;s.onerror=()=>ko(Error('Could not load the Excel reader – check your internet connection'));document.head.appendChild(s)});
+async function readX(inp){const f=inp.files[0];UP=null;if(!f)return;msg('de','Reading file…','i');
+ try{await xl();const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});let team=null,res=null;
+  wb.SheetNames.forEach(n=>{const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:''}).map(r=>Object.fromEntries(Object.entries(r).map(([k,v])=>[k.trim(),v])));if(!rows.length)return;
+   if('GROUP_NO'in rows[0]&&'PO_ELECT_IDNO'in rows[0])team=xTeam(rows);else if('EID'in rows[0]&&'POST_dESG'in rows[0])res=xRes(rows)});
+  if(!team&&!res)throw Error('No team sheet (GROUP_NO, PO_ELECT_IDNO…) or reserve sheet (EID, POST_dESG…) found');UP={team,res};
+  msg('de',`Found: ${team?team.length+' groups / '+team.reduce((a,g)=>a+g.m.length,0)+' team members':'no team sheet'}; ${res?res.length+' reserve staff':'no reserve sheet'}. Choose a mode and click Apply.`,'i')}catch(e){msg('de',e.message)}}
+async function applyX(){if(!UP)return msg('de','Choose an Excel file first');const rp=$('dm1').value==='replace';
+ if(!confirm(rp?'REPLACE the database completely? ALL attendance records and reserve assignments will also be cleared.':'Update the existing database with this file? Existing attendance is kept.'))return;
+ let T=DATA,R=RES;
+ if(UP.team)T=rp?UP.team:Object.values({...Object.fromEntries(DATA.map(g=>[g.g,g])),...Object.fromEntries(UP.team.map(g=>[g.g,g]))});
+ T=[...T].sort((a,b)=>a.g-b.g);
+ if(UP.res){if(rp)R=UP.res.map((r,i)=>(r[0]=i+1,r));else{const mp=new Map(RES.map(r=>[r[8]+'|'+r[1],r]));let mx=Math.max(0,...RES.map(r=>r[0]));UP.res.forEach(r=>{const o=mp.get(r[8]+'|'+r[1]);r[0]=o?o[0]:++mx;mp.set(r[8]+'|'+r[1],r)});R=[...mp.values()].sort((a,b)=>a[0]-b[0])}}
+ try{let w=rp;if(UP.team){await remote.dataSave('team',T,w);w=false}if(UP.res)await remote.dataSave('reserve',R,w);
+  DATA=T;RES=R;build();if(rp){ATT={};ASG={};ASR={}}UP=null;$('fx').value='';msg('de',`Database ${rp?'replaced':'updated'}: ${DATA.length} groups, ${RES.length} reserve staff`,'s')}catch(e){msg('de',e.message)}}
+async function users(){try{USERS=await remote.users();$('ul').innerHTML=`<table><tr><th>User</th><th>Role</th><th>Stations</th><th></th></tr>${USERS.map((x,i)=>`<tr><td>${esc(x.username)}</td><td>${x.role}</td><td>${x.role==='ro'?esc(fmtG(x.groups))||'none':'—'}</td><td><button class="gh" onclick="editU(${i})">Edit</button> ${x.username===ME.u?'':`<button class="no" onclick="delU(${i})">Delete</button>`}</td></tr>`).join('')}</table>`}catch(e){$('ul').textContent=e.message}}
+function editU(i){const x=USERS[i];$('nu').value=x.username;$('np').value='';$('nr').value=x.role;$('ng').value=fmtG(x.groups);$('nu').focus()}
+async function addU(){const n=$('nu').value.trim(),r=$('nr').value,g=r==='ro'?parseG($('ng').value):[];if(!n)return msg('ue','Enter a user name');if(r==='ro'&&!g.length)return msg('ue','Enter the polling stations assigned to this RO');
+ try{await remote.addU(n,$('np').value,r,g);$('nu').value=$('np').value=$('ng').value='';msg('ue','User saved','s');users()}catch(e){msg('ue',e.message)}}
+async function delU(i){const n=USERS[i].username;if(confirm('Delete user '+n+'?')){try{await remote.delU(n);users()}catch(e){msg('ue',e.message)}}}
+
+const sv=sessionStorage.getItem('me');if(sv){ME=JSON.parse(sv);start().catch(()=>sessionStorage.removeItem('me'))}
+</script></body></html>
